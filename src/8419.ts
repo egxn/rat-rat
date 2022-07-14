@@ -21,6 +21,7 @@ const threshold = (srcImageData: ImageData, threshold: number = 127) => {
   return srcImageData;
 }
 
+
 export {
   threshold
 }

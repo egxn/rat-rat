@@ -7,7 +7,7 @@ A TS library for making street stencil ~~art~~
 - [x] Threshold
 - [ ] Threshold clear noise
 - [ ] Islands warning
-- [ ] Dithering
+- [ ] Halftone
 - [ ] Color layers
 - [ ] Fill with pattern
 - [ ] Patterns
