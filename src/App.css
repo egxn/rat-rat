@@ -8,3 +8,18 @@
   position: relative;
   width: 100%;
 }
+
+.toolbar {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  justify-content: center;
+  margin: 12px;
+}
+
+button {
+  border-radius: 0;
+  height: 80px;
+  width: 120px;
+}

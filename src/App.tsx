@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import imgSample from './sample.jpg';
-import { threshold } from './8419';
+import { coloring, fill, threshold } from './8419';
 import './App.css';
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     const loadImage = () => {
       if(canvasRef.current) {
         const canvas = canvasRef.current;
@@ -24,21 +24,25 @@ function App() {
   }, []);
 
 
-  const applyTreshold = () => {      
-    console.log("TRSHLD")
+  const apply = (filter: (imageData: ImageData) => Uint8ClampedArray) => {
     if(canvasRef.current) {
       const canvas = canvasRef.current;
-      const context = canvas?.getContext('2d'); 
+      const context = canvas?.getContext('2d');
       const imageData = context?.getImageData(0, 0, 400, 400);
       if (imageData) {
-        const thresholdImageData = threshold(imageData, 60);
-        context?.putImageData(thresholdImageData, 0, 0);
+        const newImageData = filter(imageData);
+        imageData.data.set(newImageData);
+        context?.putImageData(imageData, 0, 0);
       }
     }
-  };
+  }
+
+  const applyFill = () => apply(fill);
+  const appyColoring = () => apply(coloring);
+  const applyTreshold = () => apply((imageData) => threshold(imageData, 60));
 
   return (
-    <div className="App">    
+    <div className="App">
       <div className="workbench">
         <canvas
           className="main-canvas"
@@ -46,7 +50,11 @@ function App() {
           width={400}
           ref={canvasRef}
         />
-        <button onClick={applyTreshold}> Apply threshold </button>
+        <div className="toolbar">
+          <button onClick={applyTreshold}>Threshold </button>
+          <button onClick={applyFill}> Fill </button>
+          <button onClick={appyColoring}> Coloring </button>
+        </div>
       </div>
     </div>
   );
