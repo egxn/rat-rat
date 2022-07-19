@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import imgSample from './sample.jpg';
-import { coloring, fill, threshold } from './8419';
+import { border, coloring, fill, threshold } from './8419';
 import './App.css';
 
 function App() {
@@ -40,6 +40,7 @@ function App() {
   const applyFill = () => apply(fill);
   const appyColoring = () => apply(coloring);
   const applyTreshold = () => apply((imageData) => threshold(imageData, 60));
+  const applyBorder = () => apply(border);
 
   return (
     <div className="App">
@@ -54,6 +55,7 @@ function App() {
           <button onClick={applyTreshold}>Threshold </button>
           <button onClick={applyFill}> Fill </button>
           <button onClick={appyColoring}> Coloring </button>
+          <button onClick={applyBorder}> Border </button>
         </div>
       </div>
     </div>

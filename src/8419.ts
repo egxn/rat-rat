@@ -52,7 +52,36 @@ function coloring(src: ImageData, rgbColor: number[] = [3, 144, 255]): Uint8Clam
   return drawFilter(src, getRGB);
 }
 
+function border(src: ImageData): Uint8ClampedArray {
+  const pixels = new Uint8ClampedArray(src.data);
+
+  for (let i = 0; i < src.data.length; i += 4) {
+    const [r, g, b] = [src.data[i], src.data[i+1], src.data[i+2]];
+    let outside = true;
+    if (r !== pixels?.[i+4] && g !== pixels?.[i+5] && b !== pixels?.[i+6]) {
+      if (outside) {
+        pixels[i] = 255;
+        pixels[i+1] = 255;
+        pixels[i+2] = 255;
+        outside = false;
+      } else {
+        pixels[i+4] = 255;
+        pixels[i+5] = 255;
+        pixels[i+6] = 255;
+        outside = true;
+      }
+    } else {
+      pixels[i] = r;
+      pixels[i+1] = g;
+      pixels[i+2] = b;
+    }
+  }
+
+  return pixels;
+}
+
 export {
+  border,
   coloring,
   fill,
   threshold
