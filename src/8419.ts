@@ -80,9 +80,28 @@ function border(src: ImageData): Uint8ClampedArray {
   return pixels;
 }
 
+function patternLines({color = 'blue' ,lineWidth = 5, x = 50, y = 50}): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = Math.abs(x);
+  canvas.height = Math.abs(y);
+
+  if (ctx) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+
+  return canvas;
+}
+
 export {
   border,
   coloring,
   fill,
+  patternLines,
   threshold
 }
