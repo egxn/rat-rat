@@ -80,15 +80,16 @@ function border(src: ImageData): Uint8ClampedArray {
   return pixels;
 }
 
-function patternLines({color = 'blue' ,lineWidth = 5, x = 50, y = 50}): HTMLCanvasElement {
+function patternLines({color = 'blue' ,height = 50, lineWidth = 5, startX = 0, startY = 0, width = 50 , x = 50, y = 50}): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = Math.abs(x);
-  canvas.height = Math.abs(y);
+  canvas.width = Math.abs(width);
+  canvas.height = Math.abs(height);
 
   if (ctx) {
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(0, 0);
+    ctx.moveTo(startX, startY);
     ctx.lineTo(x, y);
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;

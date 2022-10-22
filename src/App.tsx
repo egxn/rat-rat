@@ -5,7 +5,11 @@ import './App.css';
 
 interface patternSettings {
   color?: string,
+  height?: number,
   lineWidth?: number,
+  startX?: number,
+  startY?: number,
+  width?: number,
   x?: number,
   y?: number,
 }
@@ -15,7 +19,11 @@ function App() {
   const [patternRepeat, setPatternRepeat] = useState<string>('repeat');
   const [patternSettings, setPatternSettings] = useState<patternSettings>({
     color: 'white',
-    lineWidth: 5, 
+    height: 50,
+    lineWidth: 5,
+    startX: 0,
+    startY: 0,
+    width: 50,
     x: 50, 
     y: 50,
   });
@@ -97,25 +105,61 @@ function App() {
           <div className='row'>
             <label>Line width</label>
             <input
-              type="number"
               onChange={(e) => setPatternSettings({...patternSettings, lineWidth: Number(e.target.value)})}
               value={patternSettings.lineWidth}
+              type="number"
+            />
+          </div>
+          <div className='row'>
+            <label>Start X</label>
+            <input
+              max={patternSettings.width}
+              onChange={(e) => setPatternSettings({...patternSettings, startX: Number(e.target.value)})}
+              value={patternSettings.startX}
+              type="number"
+            />
+          </div>
+          <div className='row'>
+            <label>Start Y</label>
+            <input
+              max={patternSettings.height}
+              onChange={(e) => setPatternSettings({...patternSettings, startY: Number(e.target.value)})}
+              value={patternSettings.startY}
+              type="number"
             />
           </div>
           <div className='row'>
             <label>X</label>
             <input
-              type="number"
+              max={patternSettings.width}
               onChange={(e) => setPatternSettings({...patternSettings, x: Number(e.target.value)})}
               value={patternSettings.x}
+              type="number"
             />
           </div>
           <div className='row'>
             <label>Y</label>
             <input
-              type="number"
+              max={patternSettings.height}
               onChange={(e) => setPatternSettings({...patternSettings, y: Number(e.target.value)})}
               value={patternSettings.y}
+              type="number"
+            />
+          </div>
+          <div className='row'>
+            <label>Width</label>
+            <input
+              onChange={(e) => setPatternSettings({...patternSettings, width: Number(e.target.value)})}
+              value={patternSettings.width}
+              type="number"
+            />
+          </div>
+          <div className='row'>
+            <label>Height</label>
+            <input
+              onChange={(e) => setPatternSettings({...patternSettings, height: Number(e.target.value)})}
+              value={patternSettings.height}
+              type="number"
             />
           </div>
           <div>
