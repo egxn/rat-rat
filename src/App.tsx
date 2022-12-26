@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import imgSample from './sample.jpg';
-import { border, coloring, fill, patternLines ,threshold } from './8419';
+import { border, coloring, fill, hastTwoColors, getPatches ,patternLines ,threshold } from './8419';
 import './App.css';
 
 interface patternSettings {
@@ -29,6 +29,21 @@ function App() {
   });
 
 
+  const apply = (filter: (imageData: ImageData) => Uint8ClampedArray) => {
+    if(canvasRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext('2d');
+      const imageData = context?.getImageData(0, 0, 760, 7600);
+      if (imageData) {
+        const newImageData = filter(imageData);
+        imageData.data.set(newImageData);
+        context?.putImageData(imageData, 0, 0);
+      };
+    };
+  };
+
+  const applyTreshold = useCallback(() => apply((imageData) => threshold(imageData, 60)), []);
+
   useEffect(() => {
     const loadImage = () => {
       if(canvasRef.current) {
@@ -45,25 +60,10 @@ function App() {
     }
 
     loadImage();
-  }, []);
-
-
-  const apply = (filter: (imageData: ImageData) => Uint8ClampedArray) => {
-    if(canvasRef.current) {
-      const canvas = canvasRef.current;
-      const context = canvas?.getContext('2d');
-      const imageData = context?.getImageData(0, 0, 760, 7600);
-      if (imageData) {
-        const newImageData = filter(imageData);
-        imageData.data.set(newImageData);
-        context?.putImageData(imageData, 0, 0);
-      };
-    };
-  };
+  }, [applyTreshold]);
 
   const applyFill = () => apply(fill);
   const appyColoring = () => apply(coloring);
-  const applyTreshold = () => apply((imageData) => threshold(imageData, 60));
   const applyBorder = () => apply(border);
 
   const createPattern = () => {
@@ -74,6 +74,18 @@ function App() {
     if (context && pattern && canvas) {
       context.fillStyle = pattern;
       context.fillRect(0, 0, canvas.width, canvas.height);
+    };
+  };
+
+  const getChunks = async () => {
+    if(canvasRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext('2d');
+      const imageData = context?.getImageData(0, 0, 760, 760);
+      if (imageData && hastTwoColors(imageData)) {
+        const patches = await getPatches(imageData, 760);
+        console.log({patches});
+      };
     };
   };
 
@@ -88,6 +100,7 @@ function App() {
         />
         <div className="toolbar">
           <button onClick={applyTreshold}>Threshold </button>
+          <button onClick={getChunks}>Chunks</button>
           <button onClick={applyFill}> Fill </button>
           <button onClick={appyColoring}> Coloring </button>
           <button onClick={applyBorder}> Border </button>
