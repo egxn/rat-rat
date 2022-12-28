@@ -82,8 +82,25 @@ function App() {
       const canvas = canvasRef.current;
       const context = canvas?.getContext('2d');
       const imageData = context?.getImageData(0, 0, 760, 760);
+
       if (imageData && hastTwoColors(imageData)) {
         const patches = await getPatches(imageData, 760);
+        const px = new Uint8ClampedArray(imageData.data);
+
+        patches.forEach((patch) => {
+          const newR = Math.floor(Math.random() * 256);
+          const newG = Math.floor(Math.random() * 256);
+          const newB = Math.floor(Math.random() * 256);
+          patch.forEach((pixel) => {
+            const [r, g, b]: number[] = pixel;
+            px[`${r}`] = newR;
+            px[`${g}`] = newG;
+            px[`${b}`] = newB;
+          });
+
+          imageData.data.set(px);
+          context?.putImageData(imageData, 0, 0);
+        });
         console.log({patches});
       };
     };

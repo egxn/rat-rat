@@ -109,112 +109,104 @@ function hastTwoColors(src: ImageData): boolean {
   return colors.size === 2;
 }
 
-interface Pixel {
-  i?: number[];
-  iRgb?: number[];
-  right?: number[];
-  bottomLeft?: number[];
-  bottom?: number[];
-  bottomRight?: number[];
-}
+function findIndexInPixelGroup(pixelGroup: number[][][], point: number[]): number {
+  let index = -1;
 
-function getAdjacentPixels(src: ImageData, width: number): Pixel[] {
-  const pixels: Pixel[] = [];
-  for (let i = 0; i < src.data.length; i += 4) {
-    const [r, g, b] = [src.data?.[i], src.data?.[i+1], src.data?.[i+2]];
-    if (r + g + b === 0) {
-      continue;
-    }
-
-    const pixel: Pixel =  { };
-    const [rRight, gRight, bRight] = [src.data?.[i+4], src.data?.[i+5], src.data?.[i+6]];
-    const [rBottomLeft, gBottomLeft, bBottomLeft] = [src.data?.[i+width-4], src.data?.[i+width-3], src.data?.[i+width-2]];
-    const [rBottom, gBottom, bBottom] = [src.data?.[i+width], src.data?.[i+width+1], src.data?.[i+width+2]];
-    const [rBottomRight, gBottomRight, bBottomRight] = [src.data?.[i+width+4], src.data?.[i+width+5], src.data?.[i+width+6]];
-
-    if (rRight + gRight + bRight === 0) {
-      pixel.right = [i+4, i+5, i+6];
-    }
-
-    if (rBottomLeft + gBottomLeft + bBottomLeft === 0) {
-      pixel.bottomLeft = [i+width-4, i+width-3, i+width-2];
-    }
-
-    if (rBottom + gBottom + bBottom === 0) {
-      pixel.bottom = [i+width, i+width+1, i+width+2];
-    }
-
-    if (rBottomRight + gBottomRight + bBottomRight === 0) {
-      pixel.bottomRight = [i+width+4, i+width+5, i+width+6];
-    }
-
-    if (pixel?.right || pixel?.bottomLeft || pixel?.bottom || pixel?.bottomRight) {
-      pixel.i = [i, i+1, i+2];
-      pixel.iRgb = [r, g, b];
-      pixels.push(pixel);
+  for (let i = 0; i < pixelGroup.length; i++) {
+    const group : number[][] = pixelGroup[i];
+    if ( group.some((p) => p[0] === point[0] && p[1] === point[1] && p[2] === point[2])) {
+      index = i;
+      break;
     }
   }
 
-  return pixels;
+  return index;
 }
 
-function getPatches(src: ImageData, width: number): Promise<Pixel[][]> {
+
+function getPatches(src: ImageData, width: number): Promise<number[][][]> {
   return new Promise((resolve) => {
     if (!hastTwoColors(src)) {
      resolve([]);
     }
 
-    const pixels = getAdjacentPixels(src, width);
-    pixels.reduce((acc: [], pixel) => {
-      const patch: Pixel[] = [];
-      if (pixel.right) {
-        patch.push(pixel);
-        pixel.right.forEach((i) => {
-          const index = pixels.findIndex((p) => p.i?.includes(i));
-          if (index !== -1) {
-            patch.push(pixels[index]);
-          }
-        });
+    const pixelGroup: number[][][] = [];
+
+
+    for (let i = 0; i < 1200000; i += 4) {
+      const [r, g, b] = [src.data?.[i], src.data?.[i + 1], src.data?.[i + 2]];
+      if (r + g + b !== 0) {
+        continue;
       }
 
-      if (pixel.bottomLeft) {
-        patch.push(pixel);
-        pixel.bottomLeft.forEach((i) => {
-          const index = pixels.findIndex((p) => p.i?.includes(i));
-          if (index !== -1) {
-            patch.push(pixels[index]);
-          }
-        });
-      }
+      const [rLeft, gLeft, bLeft] =
+        [src.data?.[i - 4], src.data?.[i - 3], src.data?.[i - 2]];
+      const [rTop, gTop, bTop] =
+        [src.data?.[i - width], src.data?.[i - width + 1], src.data?.[i - width + 2]];
+      const [rTopLeft, gTopLeft, bTopLeft] =
+        [src.data?.[i - width - 4], src.data?.[i - width - 3], src.data?.[i - width - 2]];
+      const [rTopRight, gTopRight, bTopRight] =
+        [src.data?.[i - width + 4], src.data?.[i - width + 5], src.data?.[i - width + 6]];
 
-      if (pixel.bottom) {
-        patch.push(pixel);
-        pixel.bottom.forEach((i) => {
-          const index = pixels.findIndex((p) => p.i?.includes(i));
-          if (index !== -1) {
-            patch.push(pixels[index]);
-          }
-        });
-      }
+      if (rLeft + gLeft + bLeft === 0) {
+        const index = findIndexInPixelGroup(pixelGroup, [i - 4, i - 3, i - 2]);
+        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
+          pixelGroup[index].push([i, i + 1, i + 2]);
+        }
+      } else if (rTop + gTop + bTop === 0) {
+        const index = findIndexInPixelGroup(pixelGroup, [i - width, i - width + 1, i - width + 2]);
+        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
+          pixelGroup[index].push([i, i + 1, i + 2]);
+        }
+      } else if (rTopLeft + gTopLeft + bTopLeft === 0) {
+        const index = findIndexInPixelGroup(pixelGroup, [i - width - 4, i - width - 3, i - width - 2]);
+        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
+          pixelGroup[index].push([i, i + 1, i + 2]);
+        }
+      } else if (rTopRight + gTopRight + bTopRight === 0) {
+        const index = findIndexInPixelGroup(pixelGroup, [i - width + 4, i - width + 5, i - width + 6]);
+        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
+          pixelGroup[index].push([i, i + 1, i + 2]);
+        }
+      } else {
 
-      if (pixel.bottomRight) {
-        patch.push(pixel);
-        pixel.bottomRight.forEach((i) => {
-          const index = pixels.findIndex((p) => p.i?.includes(i));
-          if (index !== -1) {
-            patch.push(pixels[index]);
-          }
-        });
-      }
+        const [rRight, gRight, bRight] =
+          [src.data?.[i + 4], src.data?.[i + 5], src.data?.[i + 6]];
+        const [rBottom, gBottom, bBottom] =
+          [src.data?.[i + width], src.data?.[i + width + 1], src.data?.[i + width + 2]];
+        const [rBottomLeft, gBottomLeft, bBottomLeft] =
+          [src.data?.[i + width - 4], src.data?.[i + width - 3], src.data?.[i + width - 2]];
+        const [rBottomRight, gBottomRight, bBottomRight] =
+          [src.data?.[i + width + 4], src.data?.[i + width + 5], src.data?.[i + width + 6]];
 
-      if (patch.length > 0) {
-        acc.push(patch);
-      }
 
-      return acc;
-    }, []);
-    console.log(pixels);
-    const patches: Pixel[][] = [];
+        const newGroup : number[][] = [];
+        newGroup.push([i, i + 1, i + 2]);
+
+        if (rRight + gRight + bRight === 0) {
+          newGroup.push([i + 4, i + 5, i + 6]);
+        }
+
+        if (rBottom + gBottom + bBottom === 0) {
+          newGroup.push([i + width, i + width + 1, i + width + 2]);
+        }
+
+        if (rBottomLeft + gBottomLeft + bBottomLeft === 0) {
+          newGroup.push([i + width - 4, i + width - 3, i + width - 2]);
+        }
+
+        if (rBottomRight + gBottomRight + bBottomRight === 0) {
+          newGroup.push([i + width + 4, i + width + 5, i + width + 6]);
+        }
+
+        if (newGroup.length > 1) {
+          pixelGroup.push(newGroup);
+        }
+      }
+    }
+
+
+    const patches: number[][][] = pixelGroup;
     resolve(patches);
   });
 }
