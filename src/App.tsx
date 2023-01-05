@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import imgSample from './sample.jpg';
-import { border, coloring, fill, hastTwoColors, getPatches ,patternLines ,threshold } from './8419';
+// import imgSample from './sample2.png';
+import imgSample from './sample1.jpg';
+
+import {
+  border,
+  coloring, 
+  fill, 
+  hastTwoColors, 
+  getAdjacentPoints, 
+  patternLines, 
+  threshold,
+} from './8419';
 import './App.css';
 
 interface patternSettings {
@@ -14,7 +24,7 @@ interface patternSettings {
   y?: number,
 }
 
-function App() {
+  function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [patternRepeat, setPatternRepeat] = useState<string>('repeat');
   const [patternSettings, setPatternSettings] = useState<patternSettings>({
@@ -33,7 +43,7 @@ function App() {
     if(canvasRef.current) {
       const canvas = canvasRef.current;
       const context = canvas?.getContext('2d');
-      const imageData = context?.getImageData(0, 0, 760, 7600);
+      const imageData = context?.getImageData(0, 0, 200, 200);
       if (imageData) {
         const newImageData = filter(imageData);
         imageData.data.set(newImageData);
@@ -53,7 +63,7 @@ function App() {
         image.src = imgSample;
         image.onload = () => {
           context?.drawImage(
-            image, 0, 0, 760, 760);
+            image, 0, 0, 200, 200);
           applyTreshold();
         };
       }
@@ -81,27 +91,28 @@ function App() {
     if(canvasRef.current) {
       const canvas = canvasRef.current;
       const context = canvas?.getContext('2d');
-      const imageData = context?.getImageData(0, 0, 760, 760);
+      const imageData = context?.getImageData(0, 0, 200, 200);
 
-      if (imageData && hastTwoColors(imageData)) {
-        const patches = await getPatches(imageData, 760);
+      if (imageData && hastTwoColors(imageData.data)) {
+        const points = getAdjacentPoints(imageData.data, 800);
         const px = new Uint8ClampedArray(imageData.data);
 
-        patches.forEach((patch) => {
+        console.log('points', points);
+
+        points.forEach((patch) => {
           const newR = Math.floor(Math.random() * 256);
           const newG = Math.floor(Math.random() * 256);
           const newB = Math.floor(Math.random() * 256);
-          patch.forEach((pixel) => {
-            const [r, g, b]: number[] = pixel;
-            px[`${r}`] = newR;
-            px[`${g}`] = newG;
-            px[`${b}`] = newB;
+          patch.forEach((point) => {
+            px[point] = newR;
+            px[point + 1] = newG;
+            px[point + 2] = newB;
+            px[point + 3] = 255;
           });
-
-          imageData.data.set(px);
-          context?.putImageData(imageData, 0, 0);
         });
-        console.log({patches});
+
+        imageData.data.set(px);
+        context?.putImageData(imageData, 0, 0);
       };
     };
   };
@@ -111,8 +122,8 @@ function App() {
       <div className="workbench">
         <canvas
           className="main-canvas"
-          height={760}
-          width={760}
+          height={200}
+          width={200}
           ref={canvasRef}
         />
         <div className="toolbar">

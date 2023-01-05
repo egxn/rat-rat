@@ -55,7 +55,7 @@ function coloring(src: ImageData, rgbColor: number[] = [3, 144, 255]): Uint8Clam
 function border(src: ImageData): Uint8ClampedArray {
   const pixels = new Uint8ClampedArray(src.data);
 
-  for (let i = 0; i < src.data.length; i += 4) {
+  for (let i = 0; i < src.data.length * 2; i += 4) {
     const [r, g, b] = [src.data[i], src.data[i+1], src.data[i+2]];
     let outside = true;
     if (r !== pixels?.[i+4] && g !== pixels?.[i+5] && b !== pixels?.[i+6]) {
@@ -99,22 +99,22 @@ function patternLines({color = 'blue' ,height = 50, lineWidth = 5, startX = 0, s
   return canvas;
 }
 
-function hastTwoColors(src: ImageData): boolean {
+function hastTwoColors(data: Uint8ClampedArray): boolean {
   const colors = new Set();
-  for (let i = 0; i < src.data.length; i += 4) {
-    const [r, g, b] = [src.data[i], src.data[i+1], src.data[i+2]];
+  for (let i = 0; i < data.length; i += 4) {
+    const [r, g, b] = [data[i], data[i+1], data[i+2]];
     colors.add(`${r}${g}${b}`);
   }
 
   return colors.size === 2;
 }
 
-function findIndexInPixelGroup(pixelGroup: number[][][], point: number[]): number {
+function findIndexInPointGroups(points: Set<number>[], point: number): number {
   let index = -1;
 
-  for (let i = 0; i < pixelGroup.length; i++) {
-    const group : number[][] = pixelGroup[i];
-    if ( group.some((p) => p[0] === point[0] && p[1] === point[1] && p[2] === point[2])) {
+  for (let i = 0; i < points.length; i++) {
+    const group : Set<number> = points[i];
+    if (group.has(point)) {
       index = i;
       break;
     }
@@ -123,100 +123,110 @@ function findIndexInPixelGroup(pixelGroup: number[][][], point: number[]): numbe
   return index;
 }
 
-
-function getPatches(src: ImageData, width: number): Promise<number[][][]> {
-  return new Promise((resolve) => {
-    if (!hastTwoColors(src)) {
-     resolve([]);
-    }
-
-    const pixelGroup: number[][][] = [];
-
-
-    for (let i = 0; i < 1200000; i += 4) {
-      const [r, g, b] = [src.data?.[i], src.data?.[i + 1], src.data?.[i + 2]];
-      if (r + g + b !== 0) {
-        continue;
+function pixelsToPoints(data: Uint8ClampedArray): number[] {
+  return Array.from(data)
+    .reduce((acc, cur, i) => {
+      if (i % 4 === 0 && cur === 0) {
+        acc.push(i);
       }
 
-      const [rLeft, gLeft, bLeft] =
-        [src.data?.[i - 4], src.data?.[i - 3], src.data?.[i - 2]];
-      const [rTop, gTop, bTop] =
-        [src.data?.[i - width], src.data?.[i - width + 1], src.data?.[i - width + 2]];
-      const [rTopLeft, gTopLeft, bTopLeft] =
-        [src.data?.[i - width - 4], src.data?.[i - width - 3], src.data?.[i - width - 2]];
-      const [rTopRight, gTopRight, bTopRight] =
-        [src.data?.[i - width + 4], src.data?.[i - width + 5], src.data?.[i - width + 6]];
-
-      if (rLeft + gLeft + bLeft === 0) {
-        const index = findIndexInPixelGroup(pixelGroup, [i - 4, i - 3, i - 2]);
-        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
-          pixelGroup[index].push([i, i + 1, i + 2]);
-        }
-      } else if (rTop + gTop + bTop === 0) {
-        const index = findIndexInPixelGroup(pixelGroup, [i - width, i - width + 1, i - width + 2]);
-        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
-          pixelGroup[index].push([i, i + 1, i + 2]);
-        }
-      } else if (rTopLeft + gTopLeft + bTopLeft === 0) {
-        const index = findIndexInPixelGroup(pixelGroup, [i - width - 4, i - width - 3, i - width - 2]);
-        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
-          pixelGroup[index].push([i, i + 1, i + 2]);
-        }
-      } else if (rTopRight + gTopRight + bTopRight === 0) {
-        const index = findIndexInPixelGroup(pixelGroup, [i - width + 4, i - width + 5, i - width + 6]);
-        if (index !== -1 && !pixelGroup[index].includes([i, i + 1, i + 2])) {
-          pixelGroup[index].push([i, i + 1, i + 2]);
-        }
-      } else {
-
-        const [rRight, gRight, bRight] =
-          [src.data?.[i + 4], src.data?.[i + 5], src.data?.[i + 6]];
-        const [rBottom, gBottom, bBottom] =
-          [src.data?.[i + width], src.data?.[i + width + 1], src.data?.[i + width + 2]];
-        const [rBottomLeft, gBottomLeft, bBottomLeft] =
-          [src.data?.[i + width - 4], src.data?.[i + width - 3], src.data?.[i + width - 2]];
-        const [rBottomRight, gBottomRight, bBottomRight] =
-          [src.data?.[i + width + 4], src.data?.[i + width + 5], src.data?.[i + width + 6]];
-
-
-        const newGroup : number[][] = [];
-        newGroup.push([i, i + 1, i + 2]);
-
-        if (rRight + gRight + bRight === 0) {
-          newGroup.push([i + 4, i + 5, i + 6]);
-        }
-
-        if (rBottom + gBottom + bBottom === 0) {
-          newGroup.push([i + width, i + width + 1, i + width + 2]);
-        }
-
-        if (rBottomLeft + gBottomLeft + bBottomLeft === 0) {
-          newGroup.push([i + width - 4, i + width - 3, i + width - 2]);
-        }
-
-        if (rBottomRight + gBottomRight + bBottomRight === 0) {
-          newGroup.push([i + width + 4, i + width + 5, i + width + 6]);
-        }
-
-        if (newGroup.length > 1) {
-          pixelGroup.push(newGroup);
-        }
-      }
-    }
-
-
-    const patches: number[][][] = pixelGroup;
-    resolve(patches);
-  });
+      return acc;
+    }, [] as number[]);
 }
+
+function getAdjacentPoints(data: Uint8ClampedArray, width: number): number[][] {
+  const points: number[] = pixelsToPoints(data);
+  if (!hastTwoColors(data)) {
+    return [];
+  }
+
+  const pointGroup: Set<number>[] = [];
+  const usedPoints: Set<number> = new Set();
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    const left = point - 4;
+    const right = point + 4;
+
+    const topLeft = point - width - 4;
+    const top = point - width;
+    const topRight = point - width + 4;
+
+    const bottomLeft = point + width - 4;
+    const bottom = point + width;
+    const bottomRight = point + width + 4;
+
+    const previousPoints = [left, topLeft, top, topRight]
+      .filter((p) => points.includes(p))
+      .sort((a, b) => a - b);
+
+    const nextPoints = [right, bottom, bottomRight, bottomLeft]
+      .filter((p) => points.includes(p))
+      .sort((a, b) => a - b);
+
+    const [indexPoint] = previousPoints
+      .map((p) => findIndexInPointGroups(pointGroup, p))
+      .filter((index) => index !== -1)
+      .sort((a, b) => a - b);
+
+    if (indexPoint !== undefined) {
+      previousPoints.forEach((p) => {
+        // if (!usedPoints.has(p)) {
+          pointGroup[indexPoint].add(p)
+          usedPoints.add(p);
+        // }
+      });
+      nextPoints.forEach((p) => {
+        // if (!usedPoints.has(p)) {
+          pointGroup[indexPoint].add(p)
+          usedPoints.add(p);
+        // }
+      });
+      // if (!usedPoints.has(point)) {
+        pointGroup[indexPoint].add(point);
+        usedPoints.add(point);
+      // }
+    } else {
+      const newGroup = new Set<number>();
+      previousPoints.forEach((p) => newGroup.add(p));
+      nextPoints.forEach((p) => newGroup.add(p));
+      pointGroup.push(newGroup);
+    }
+  }
+
+  return pointGroup.map((group) => Array.from(group));
+}
+
+const testPoints = new Uint8ClampedArray([
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+
+  255, 255, 255, 255,
+  0, 0, 0, 255,
+  0, 0, 0, 255,
+  255, 255, 255, 255,
+
+  255, 255, 255, 255,
+  0, 0, 0, 255,
+  0, 0, 0, 255,
+  255, 255, 255, 255,
+
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+]);
 
 export {
   border,
   coloring,
   fill,
-  getPatches,
+  getAdjacentPoints,
   hastTwoColors,
   patternLines,
+  pixelsToPoints,
+  testPoints,
   threshold
 }
