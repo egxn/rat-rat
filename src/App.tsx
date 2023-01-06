@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 // import imgSample from './sample2.png';
-import imgSample from './sample1.jpg';
+import imgSample from './sample.jpg';
 
 import {
   border,
@@ -39,13 +39,13 @@ interface patternSettings {
   });
 
 
-  const apply = (filter: (imageData: ImageData) => Uint8ClampedArray) => {
+    const apply = (filter: (imageData: Uint8ClampedArray) => Uint8ClampedArray) => {
     if(canvasRef.current) {
       const canvas = canvasRef.current;
       const context = canvas?.getContext('2d');
       const imageData = context?.getImageData(0, 0, 200, 200);
       if (imageData) {
-        const newImageData = filter(imageData);
+        const newImageData = filter(imageData.data);
         imageData.data.set(newImageData);
         context?.putImageData(imageData, 0, 0);
       };
